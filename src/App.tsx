@@ -78,7 +78,17 @@ export default function App() {
 
     return () => {
       active = false
-      wsRef.current?.close()
+      if (wsRef.current) {
+        const ws = wsRef.current
+        ws.onclose   = null
+        ws.onerror   = null
+        ws.onmessage = null
+        if (ws.readyState === WebSocket.CONNECTING) {
+          ws.onopen = () => ws.close()
+        } else {
+          ws.close()
+        }
+      }
       worker.terminate()
     }
   }, [])
