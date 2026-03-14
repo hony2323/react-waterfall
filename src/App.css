@@ -80,6 +80,47 @@ pre {
   word-break: break-all;
 }
 
+.metrics-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: 20px;
+  color: #7dd3fc;
+  font-weight: bold;
+}
+
+.metric-divider {
+  width: 1px;
+  height: 36px;
+  background: #334155;
+}
+
+.metric-note {
+  font-size: 11px;
+  color: #475569;
+  margin-left: auto;
+}
+
 .waiting {
   color: #475569;
   text-align: center;
