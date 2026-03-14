@@ -142,6 +142,7 @@ export default function App() {
       <WaterfallCanvas
         ref={waterfallRef}
         colorMap={interpolateTurbo}
+        bufferWidth={0}
         rowHeight={rowHeight}
         tooltip
         freqFormat={freqFormat}
