@@ -122,14 +122,22 @@ export default function App() {
       )}
 
       {frame ? (
-        <WaterfallCanvas frame={frame} colorMap={interpolateTurbo} rowHeight={rowHeight} tooltip onMetrics={(pushMs, renderMs) => {
-          const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
-          const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
-          pushWindow.current   = pw
-          renderWindow.current = rw
-          setAvgPush(avg(pw))
-          setAvgRender(avg(rw))
-        }} />
+        <WaterfallCanvas
+          frame={frame}
+          colorMap={interpolateTurbo}
+          rowHeight={rowHeight}
+          tooltip
+          freqFormat={hz => (hz / 1e6).toFixed(2) + ' MHz'}
+          valueFormat={t  => (t * 100).toFixed(1) + ' dBFS'}
+          onMetrics={(pushMs, renderMs) => {
+            const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
+            const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
+            pushWindow.current   = pw
+            renderWindow.current = rw
+            setAvgPush(avg(pw))
+            setAvgRender(avg(rw))
+          }}
+        />
       ) : (
         <p className="waiting">Waiting for data…</p>
       )}
