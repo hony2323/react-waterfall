@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import ParserWorker from './parser.worker?worker'
 import { WaterfallCanvas } from 'waterfall-canvas/react'
+import { interpolateTurbo } from 'waterfall-canvas'
 import type { ParsedFrame } from 'waterfall-canvas'
 
 const WS_URL = 'ws://localhost:8000/ws'
@@ -112,7 +113,9 @@ export default function App() {
       )}
 
       {frame ? (
-        <WaterfallCanvas frame={frame} onMetrics={(pushMs, renderMs) => {
+        <WaterfallCanvas frame={frame} 
+        colorMap={interpolateTurbo} 
+        onMetrics={(pushMs, renderMs) => {
           const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
           const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
           pushWindow.current   = pw
