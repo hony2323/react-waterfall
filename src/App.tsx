@@ -4,9 +4,13 @@ import ParserWorker from './parser.worker?worker'
 import { WaterfallCanvas } from 'waterfall-canvas/react'
 import { interpolateTurbo } from 'waterfall-canvas'
 import type { ParsedFrame } from 'waterfall-canvas'
+import type { WaterfallCanvasHandle } from 'waterfall-canvas/react'
 
 const WS_URL = 'ws://localhost:8000/ws'
 const ROLLING_WINDOW = 20
+
+const freqFormat = (hz: number) => (hz / 1e6).toFixed(4) + ' MHz'
+const valueFormat = (t: number) => (t * 100).toFixed(1) + ' dBFS'
 
 function avg(arr: number[]): number {
   return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0
@@ -14,8 +18,9 @@ function avg(arr: number[]): number {
 
 export default function App() {
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
-  const [frame, setFrame] = useState<ParsedFrame | null>(null)
+  const [hasFrame, setHasFrame] = useState(false)
   const [frameCount, setFrameCount] = useState(0)
+  const waterfallRef = useRef<WaterfallCanvasHandle>(null)
   const [avgDelivery, setAvgDelivery] = useState(0)
   const [avgParse, setAvgParse] = useState(0)
   const [avgPush, setAvgPush] = useState(0)
@@ -36,12 +41,14 @@ export default function App() {
     worker.onmessage = (e: MessageEvent<{ frame: ParsedFrame; deliveryMs: number; parseMs: number }>) => {
       const { frame, deliveryMs, parseMs } = e.data
 
+      waterfallRef.current?.push(frame)
+
       const dw = [...deliveryWindow.current, deliveryMs].slice(-ROLLING_WINDOW)
       const pw = [...parseWindow.current, parseMs].slice(-ROLLING_WINDOW)
       deliveryWindow.current = dw
       parseWindow.current = pw
 
-      setFrame(frame)
+      setHasFrame(true)
       setFrameCount(n => n + 1)
       setAvgDelivery(avg(dw))
       setAvgParse(avg(pw))
@@ -121,26 +128,24 @@ export default function App() {
         </div>
       )}
 
-      {frame ? (
-        <WaterfallCanvas
-          frame={frame}
-          colorMap={interpolateTurbo}
-          rowHeight={rowHeight}
-          tooltip
-          freqFormat={hz => (hz / 1e6).toFixed(2) + ' MHz'}
-          valueFormat={t  => (t * 100).toFixed(1) + ' dBFS'}
-          onMetrics={(pushMs, renderMs) => {
-            const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
-            const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
-            pushWindow.current   = pw
-            renderWindow.current = rw
-            setAvgPush(avg(pw))
-            setAvgRender(avg(rw))
-          }}
-        />
-      ) : (
-        <p className="waiting">Waiting for data…</p>
-      )}
+      {!hasFrame && <p className="waiting">Waiting for data…</p>}
+      <WaterfallCanvas
+        ref={waterfallRef}
+        colorMap={interpolateTurbo}
+        rowHeight={rowHeight}
+        tooltip
+        freqFormat={freqFormat}
+        valueFormat={valueFormat}
+        onMetrics={(pushMs, renderMs) => {
+          const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
+          const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
+          pushWindow.current   = pw
+          renderWindow.current = rw
+          setAvgPush(avg(pw))
+          setAvgRender(avg(rw))
+        }}
+        heightPx={hasFrame ? 400 : 0}
+      />
     </div>
   )
 }
