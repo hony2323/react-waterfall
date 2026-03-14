@@ -41,6 +41,7 @@ export default function App() {
   const workerRef = useRef<Worker | null>(null)
 
   useEffect(() => {
+    let active = true
     const worker = new ParserWorker()
     workerRef.current = worker
 
@@ -59,17 +60,20 @@ export default function App() {
     }
 
     function connect() {
+      if (!active) return
       const ws = new WebSocket(WS_URL)
       wsRef.current = ws
       ws.binaryType = 'arraybuffer'
 
-      ws.onopen = () => setStatus('connected')
+      ws.onopen = () => { if (active) setStatus('connected') }
       ws.onclose = () => {
+        if (!active) return
         setStatus('disconnected')
         setTimeout(connect, 2000)
       }
       ws.onerror = () => ws.close()
       ws.onmessage = ({ data }) => {
+        if (!active) return
         const buffer = data as ArrayBuffer
         worker.postMessage({ buffer, receivedAt: Date.now() }, [buffer])
       }
@@ -78,6 +82,7 @@ export default function App() {
     connect()
 
     return () => {
+      active = false
       wsRef.current?.close()
       worker.terminate()
     }
