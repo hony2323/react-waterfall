@@ -221,27 +221,33 @@ export default function WaterfallCanvas({ frame, rowCount = 400, heightPx = 400,
     return () => ro.disconnect()
   }, [heightPx])
 
-  function handleWheel(e: React.WheelEvent<HTMLCanvasElement>) {
-    e.preventDefault()
-    const total = totalSamples.current
-    if (!total) return
+  // Wheel must be non-passive to call preventDefault (React attaches passive by default)
+  useEffect(() => {
+    const canvas = visCanvasRef.current
+    if (!canvas) return
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault()
+      const total = totalSamples.current
+      if (!total) return
 
-    const span      = viewEnd.current - viewStart.current
-    const factor    = e.deltaY > 0 ? 1.15 : 0.85
-    const newSpan   = Math.max(256, Math.min(total, span * factor))
-    const canvas    = visCanvasRef.current!
-    const cursorFrac   = e.nativeEvent.offsetX / canvas.clientWidth
-    const cursorSample = viewStart.current + cursorFrac * span
+      const span         = viewEnd.current - viewStart.current
+      const factor       = e.deltaY > 0 ? 1.15 : 0.85
+      const newSpan      = Math.max(256, Math.min(total, span * factor))
+      const cursorFrac   = e.offsetX / canvas!.clientWidth
+      const cursorSample = viewStart.current + cursorFrac * span
 
-    let newStart = cursorSample - cursorFrac * newSpan
-    let newEnd   = newStart + newSpan
-    if (newStart < 0)   { newStart = 0;     newEnd = newSpan }
-    if (newEnd > total) { newEnd = total;   newStart = total - newSpan }
+      let newStart = cursorSample - cursorFrac * newSpan
+      let newEnd   = newStart + newSpan
+      if (newStart < 0)   { newStart = 0;     newEnd = newSpan }
+      if (newEnd > total) { newEnd = total;   newStart = total - newSpan }
 
-    viewStart.current = Math.max(0, newStart)
-    viewEnd.current   = Math.min(total, newEnd)
-    viewDirty.current = true
-  }
+      viewStart.current = Math.max(0, newStart)
+      viewEnd.current   = Math.min(total, newEnd)
+      viewDirty.current = true
+    }
+    canvas.addEventListener('wheel', handleWheel, { passive: false })
+    return () => canvas.removeEventListener('wheel', handleWheel)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
     dragActive.current = true
@@ -278,7 +284,6 @@ export default function WaterfallCanvas({ frame, rowCount = 400, heightPx = 400,
       <canvas
         ref={visCanvasRef}
         style={{ width: '100%', height: `${heightPx}px`, cursor: 'grab', display: 'block' }}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
