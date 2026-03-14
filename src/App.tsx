@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import ParserWorker from './parser.worker?worker'
+import WaterfallCanvas from './components/WaterfallCanvas'
 
 interface BandHeader {
   band_id: string
@@ -14,7 +15,7 @@ interface BandHeader {
 
 interface ParsedFrame {
   header: BandHeader[]
-  bands: Record<string, number[]>
+  bands: Record<string, Uint8Array | Uint16Array | Float32Array>
 }
 
 const WS_URL = 'ws://localhost:8000/ws'
@@ -66,7 +67,6 @@ export default function App() {
       ws.onerror = () => ws.close()
       ws.onmessage = ({ data }) => {
         const buffer = data as ArrayBuffer
-        // Transfer the buffer to the worker (zero-copy)
         worker.postMessage({ buffer, receivedAt: Date.now() }, [buffer])
       }
     }
@@ -107,18 +107,7 @@ export default function App() {
       )}
 
       {frame ? (
-        <div className="content">
-          <section>
-            <h2>Header</h2>
-            <pre>{JSON.stringify(frame.header, null, 2)}</pre>
-          </section>
-          {Object.entries(frame.bands).map(([id, samples]) => (
-            <section key={id}>
-              <h2>{id} <span className="note">(first 16 samples)</span></h2>
-              <pre>{JSON.stringify(samples, null, 2)}</pre>
-            </section>
-          ))}
-        </div>
+        <WaterfallCanvas frame={frame} />
       ) : (
         <p className="waiting">Waiting for data…</p>
       )}
