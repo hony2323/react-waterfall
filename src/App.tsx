@@ -31,8 +31,12 @@ export default function App() {
   const [frameCount, setFrameCount] = useState(0)
   const [avgDelivery, setAvgDelivery] = useState(0)
   const [avgParse, setAvgParse] = useState(0)
+  const [avgPush, setAvgPush] = useState(0)
+  const [avgRender, setAvgRender] = useState(0)
   const deliveryWindow = useRef<number[]>([])
-  const parseWindow = useRef<number[]>([])
+  const parseWindow    = useRef<number[]>([])
+  const pushWindow     = useRef<number[]>([])
+  const renderWindow   = useRef<number[]>([])
   const wsRef = useRef<WebSocket | null>(null)
   const workerRef = useRef<Worker | null>(null)
 
@@ -102,12 +106,29 @@ export default function App() {
             <span className="metric-label">avg parse</span>
             <span className="metric-value">{avgParse.toFixed(2)} ms</span>
           </div>
+          <div className="metric-divider" />
+          <div className="metric">
+            <span className="metric-label">avg push</span>
+            <span className="metric-value">{avgPush.toFixed(2)} ms</span>
+          </div>
+          <div className="metric-divider" />
+          <div className="metric">
+            <span className="metric-label">avg render</span>
+            <span className="metric-value">{avgRender.toFixed(2)} ms</span>
+          </div>
           <span className="metric-note">rolling {ROLLING_WINDOW}-frame window · parse measured on dedicated thread</span>
         </div>
       )}
 
       {frame ? (
-        <WaterfallCanvas frame={frame} />
+        <WaterfallCanvas frame={frame} onMetrics={(pushMs, renderMs) => {
+          const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
+          const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
+          pushWindow.current   = pw
+          renderWindow.current = rw
+          setAvgPush(avg(pw))
+          setAvgRender(avg(rw))
+        }} />
       ) : (
         <p className="waiting">Waiting for data…</p>
       )}
