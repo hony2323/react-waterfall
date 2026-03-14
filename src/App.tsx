@@ -1,22 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import ParserWorker from './parser.worker?worker'
-import WaterfallCanvas from './components/WaterfallCanvas'
-
-interface BandHeader {
-  band_id: string
-  band_start: number
-  band_end: number
-  timestamp: string
-  sent_at: number
-  length: number
-  precision: string
-}
-
-interface ParsedFrame {
-  header: BandHeader[]
-  bands: Record<string, Uint8Array | Uint16Array | Float32Array>
-}
+import { WaterfallCanvas } from 'waterfall-canvas/react'
+import type { ParsedFrame } from 'waterfall-canvas'
 
 const WS_URL = 'ws://localhost:8000/ws'
 const ROLLING_WINDOW = 20
