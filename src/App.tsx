@@ -122,7 +122,7 @@ export default function App() {
       )}
 
       {frame ? (
-        <WaterfallCanvas frame={frame} colorMap={interpolateTurbo} rowHeight={rowHeight} onMetrics={(pushMs, renderMs) => {
+        <WaterfallCanvas frame={frame} colorMap={interpolateTurbo} rowHeight={rowHeight} tooltip onMetrics={(pushMs, renderMs) => {
           const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
           const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
           pushWindow.current   = pw
