@@ -20,6 +20,7 @@ export default function App() {
   const [avgParse, setAvgParse] = useState(0)
   const [avgPush, setAvgPush] = useState(0)
   const [avgRender, setAvgRender] = useState(0)
+  const [rowHeight, setRowHeight] = useState(1)
   const deliveryWindow = useRef<number[]>([])
   const parseWindow    = useRef<number[]>([])
   const pushWindow     = useRef<number[]>([])
@@ -108,14 +109,20 @@ export default function App() {
             <span className="metric-label">avg render</span>
             <span className="metric-value">{avgRender.toFixed(2)} ms</span>
           </div>
+          <div className="metric-divider" />
+          <div className="metric">
+            <span className="metric-label">line height</span>
+            <div className="metric-slider-row">
+              <input type="range" min={1} max={8} value={rowHeight} onChange={e => setRowHeight(Number(e.target.value))} />
+              <span className="metric-value">{rowHeight}px</span>
+            </div>
+          </div>
           <span className="metric-note">rolling {ROLLING_WINDOW}-frame window · parse measured on dedicated thread</span>
         </div>
       )}
 
       {frame ? (
-        <WaterfallCanvas frame={frame} 
-        colorMap={interpolateTurbo} 
-        onMetrics={(pushMs, renderMs) => {
+        <WaterfallCanvas frame={frame} colorMap={interpolateTurbo} rowHeight={rowHeight} onMetrics={(pushMs, renderMs) => {
           const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
           const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
           pushWindow.current   = pw

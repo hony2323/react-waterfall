@@ -120,6 +120,23 @@ pre {
   margin-left: auto;
 }
 
+.metric-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-slider-row input[type="range"] {
+  accent-color: #7dd3fc;
+  width: 72px;
+  cursor: pointer;
+}
+
+.metric-slider-row .metric-value {
+  font-size: 14px;
+  min-width: 28px;
+}
+
 .waiting {
   color: #475569;
   text-align: center;
