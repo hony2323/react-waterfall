@@ -146,6 +146,8 @@ export default function App() {
         minSpan={32}
         rowHeight={rowHeight}
         tooltip
+        timeBar
+        timeBarDynamic={false}
         freqFormat={freqFormat}
         valueFormat={valueFormat}
         onMetrics={(pushMs, renderMs) => {
