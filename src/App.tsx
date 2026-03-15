@@ -143,6 +143,7 @@ export default function App() {
         ref={waterfallRef}
         colorMap={interpolateTurbo}
         bufferWidth={0}
+        minSpan={32}
         rowHeight={rowHeight}
         tooltip
         freqFormat={freqFormat}
