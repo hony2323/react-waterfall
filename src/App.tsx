@@ -25,6 +25,7 @@ export default function App() {
   const [avgParse, setAvgParse] = useState(0)
   const [avgPush, setAvgPush] = useState(0)
   const [avgRender, setAvgRender] = useState(0)
+  const [isLazy, setIsLazy] = useState(false)
   const [rowHeight, setRowHeight] = useState(1)
   const deliveryWindow = useRef<number[]>([])
   const parseWindow    = useRef<number[]>([])
@@ -128,6 +129,13 @@ export default function App() {
           </div>
           <div className="metric-divider" />
           <div className="metric">
+            <span className="metric-label">render mode</span>
+            <span className="metric-value" style={{ color: isLazy ? '#f59e0b' : '#22c55e' }}>
+              {isLazy ? 'lazy' : 'precise'}
+            </span>
+          </div>
+          <div className="metric-divider" />
+          <div className="metric">
             <span className="metric-label">line height</span>
             <div className="metric-slider-row">
               <input type="range" min={1} max={8} value={rowHeight} onChange={e => setRowHeight(Number(e.target.value))} />
@@ -135,6 +143,8 @@ export default function App() {
             </div>
           </div>
           <span className="metric-note">rolling {ROLLING_WINDOW}-frame window · parse measured on dedicated thread</span>
+          <div className="metric-divider" />
+          <button className="export-btn" onClick={() => waterfallRef.current?.exportImage({ format: 'bmp' })}>export BMP</button>
         </div>
       )}
 
@@ -150,13 +160,14 @@ export default function App() {
         timeBarDynamic={false}
         freqFormat={freqFormat}
         valueFormat={valueFormat}
-        onMetrics={(pushMs, renderMs) => {
+        onMetrics={(pushMs, renderMs, lazy) => {
           const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
           const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
           pushWindow.current   = pw
           renderWindow.current = rw
           setAvgPush(avg(pw))
           setAvgRender(avg(rw))
+          setIsLazy(lazy)
         }}
         heightPx={hasFrame ? 400 : 0}
       />
