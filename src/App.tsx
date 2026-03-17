@@ -170,8 +170,7 @@ export default function App() {
               <span className="metric-value">{rowHeight}px</span>
             </div>
           </div>
-          <span className="metric-note">rolling {ROLLING_WINDOW}-frame window · parse measured on dedicated thread</span>
-          <div className="metric-divider" />
+<div className="metric-divider" />
           <button className="export-btn" onClick={() => waterfallRef.current?.exportImage({ format: 'bmp' })}>export BMP</button>
         </div>
       )}
