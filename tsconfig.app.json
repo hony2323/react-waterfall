@@ -22,7 +22,11 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "waterfall-canvas":       ["../packages/waterfall-canvas/src/index.ts"],
+      "waterfall-canvas/react": ["../packages/waterfall-canvas/src/WaterfallCanvas.tsx"]
+    }
   },
   "include": ["src"]
 }

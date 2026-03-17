@@ -37,12 +37,17 @@ self.onmessage = (e: MessageEvent<{ buffer: ArrayBuffer; receivedAt: number }>) 
 
   for (const band of header) {
     let typed: Uint8Array | Uint16Array | Float32Array
+    // Uint8Array has no alignment requirement, so we use it to copy the raw bytes
+    // first, producing a fresh ArrayBuffer that starts at offset 0. Float32Array
+    // and Uint16Array require 4- and 2-byte alignment respectively, which is not
+    // guaranteed when offset = 4 + headerLen (variable-length JSON).
+    const bytes = new Uint8Array(buffer, offset, band.length).slice()
     if (band.precision === 'float32') {
-      typed = new Float32Array(buffer, offset, band.length / 4).slice()
+      typed = new Float32Array(bytes.buffer)
     } else if (band.precision === 'uint16') {
-      typed = new Uint16Array(buffer, offset, band.length / 2).slice()
+      typed = new Uint16Array(bytes.buffer)
     } else {
-      typed = new Uint8Array(buffer, offset, band.length).slice()
+      typed = bytes
     }
     bands[band.band_id] = typed
     transferables.push(typed.buffer)

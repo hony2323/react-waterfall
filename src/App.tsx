@@ -2,14 +2,32 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import ParserWorker from './parser.worker?worker'
 import { WaterfallCanvas } from 'waterfall-canvas/react'
-import { interpolateTurbo } from 'waterfall-canvas'
-import type { ParsedFrame } from 'waterfall-canvas'
+import { interpolateTurbo, type ParsedFrame } from 'waterfall-canvas'
+
+// Inferno: black → deep purple → red → yellow (matplotlib inferno palette)
+function interpolateInferno(t: number): [number, number, number] {
+  t = Math.max(0, Math.min(1, t))
+  t = Math.pow(t, 0.75) // mild gamma expansion for speech contrast
+  const stops: [number, number, number, number][] = [
+    [0.00,   0,   0,   4],
+    [0.25,  86,  16, 110],
+    [0.50, 187,  55,  84],
+    [0.75, 249, 140,   9],
+    [1.00, 252, 255, 164],
+  ]
+  let i = 1
+  while (i < stops.length - 1 && stops[i][0] < t) i++
+  const [t0, r0, g0, b0] = stops[i - 1]
+  const [t1, r1, g1, b1] = stops[i]
+  const u = (t - t0) / (t1 - t0)
+  return [Math.round(r0 + u * (r1 - r0)), Math.round(g0 + u * (g1 - g0)), Math.round(b0 + u * (b1 - b0))]
+}
 import type { WaterfallCanvasHandle } from 'waterfall-canvas/react'
 
 const WS_URL = 'ws://localhost:8000/ws'
 const ROLLING_WINDOW = 20
 
-const freqFormat = (hz: number) => (hz / 1e6).toFixed(4) + ' MHz'
+const freqFormat = (hz: number) => hz >= 1000 ? (hz / 1000).toFixed(1) + ' kHz' : hz.toFixed(0) + ' Hz'
 const valueFormat = (t: number) => (t * 100).toFixed(1) + ' dBFS'
 
 function avg(arr: number[]): number {
@@ -27,6 +45,7 @@ export default function App() {
   const [avgRender, setAvgRender] = useState(0)
   const [isLazy, setIsLazy] = useState(false)
   const [rowHeight, setRowHeight] = useState(1)
+  const [binCounts, setBinCounts] = useState<Record<string, number>>({})
   const deliveryWindow = useRef<number[]>([])
   const parseWindow    = useRef<number[]>([])
   const pushWindow     = useRef<number[]>([])
@@ -43,6 +62,8 @@ export default function App() {
       const { frame, deliveryMs, parseMs } = e.data
 
       waterfallRef.current?.push(frame)
+
+      setBinCounts(Object.fromEntries(Object.entries(frame.bands).map(([id, arr]) => [id, arr.length])))
 
       const dw = [...deliveryWindow.current, deliveryMs].slice(-ROLLING_WINDOW)
       const pw = [...parseWindow.current, parseMs].slice(-ROLLING_WINDOW)
@@ -135,6 +156,13 @@ export default function App() {
             </span>
           </div>
           <div className="metric-divider" />
+          {Object.entries(binCounts).map(([id, count]) => (
+            <div className="metric" key={id}>
+              <span className="metric-label">{id} bins</span>
+              <span className="metric-value">{count}</span>
+            </div>
+          ))}
+          <div className="metric-divider" />
           <div className="metric">
             <span className="metric-label">line height</span>
             <div className="metric-slider-row">
@@ -151,13 +179,13 @@ export default function App() {
       {!hasFrame && <p className="waiting">Waiting for data…</p>}
       <WaterfallCanvas
         ref={waterfallRef}
-        colorMap={interpolateTurbo}
+        colorMap={interpolateInferno}
         bufferWidth={0}
         minSpan={32}
         rowHeight={rowHeight}
+        direction="right"
         tooltip
-        timeBar
-        timeBarDynamic={false}
+        lazyThreshold={Infinity}
         freqFormat={freqFormat}
         valueFormat={valueFormat}
         onMetrics={(pushMs, renderMs, lazy) => {
