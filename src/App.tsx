@@ -7,7 +7,6 @@ import { interpolateTurbo, type ParsedFrame } from 'waterfall-canvas'
 // Inferno: black → deep purple → red → yellow (matplotlib inferno palette)
 function interpolateInferno(t: number): [number, number, number] {
   t = Math.max(0, Math.min(1, t))
-  t = Math.pow(t, 0.75) // mild gamma expansion for speech contrast
   const stops: [number, number, number, number][] = [
     [0.00,   0,   0,   4],
     [0.25,  86,  16, 110],
@@ -46,6 +45,8 @@ export default function App() {
   const [isLazy, setIsLazy] = useState(false)
   const [rowHeight, setRowHeight] = useState(1)
   const [binCounts, setBinCounts] = useState<Record<string, number>>({})
+  const [contrast, setContrast] = useState(1.5)    // higher = brighter faint signals
+  const [sensitivity, setSensitivity] = useState(0.7) // higher = more frequencies visible
   const deliveryWindow = useRef<number[]>([])
   const parseWindow    = useRef<number[]>([])
   const pushWindow     = useRef<number[]>([])
@@ -170,7 +171,23 @@ export default function App() {
               <span className="metric-value">{rowHeight}px</span>
             </div>
           </div>
-<div className="metric-divider" />
+          <div className="metric-divider" />
+          <div className="metric">
+            <span className="metric-label">sensitivity</span>
+            <div className="metric-slider-row">
+              <input type="range" min={0} max={1} step={0.05} value={sensitivity} onChange={e => setSensitivity(Number(e.target.value))} />
+              <span className="metric-value">{sensitivity.toFixed(2)}</span>
+            </div>
+          </div>
+          <div className="metric-divider" />
+          <div className="metric">
+            <span className="metric-label">contrast</span>
+            <div className="metric-slider-row">
+              <input type="range" min={0.1} max={2} step={0.05} value={contrast} onChange={e => setContrast(Number(e.target.value))} />
+              <span className="metric-value">{contrast.toFixed(2)}</span>
+            </div>
+          </div>
+          <div className="metric-divider" />
           <button className="export-btn" onClick={() => waterfallRef.current?.exportImage({ format: 'bmp' })}>export BMP</button>
         </div>
       )}
@@ -178,15 +195,17 @@ export default function App() {
       {!hasFrame && <p className="waiting">Waiting for data…</p>}
       <WaterfallCanvas
         ref={waterfallRef}
-        colorMap={interpolateInferno}
+        colorMap={interpolateTurbo}
         bufferWidth={0}
         minSpan={32}
         rowHeight={rowHeight}
-        direction="right"
+        direction="top"
         tooltip
-        lazyThreshold={Infinity}
+        // lazyThreshold={Infinity}
         freqFormat={freqFormat}
         valueFormat={valueFormat}
+        sensitivity={{ low: (1 - sensitivity) * 0.5, high: 1.0 }}
+        gamma={2.1 - contrast}
         onMetrics={(pushMs, renderMs, lazy) => {
           const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
           const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
