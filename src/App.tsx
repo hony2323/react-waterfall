@@ -26,8 +26,11 @@ import type { WaterfallCanvasHandle } from 'waterfall-canvas/react'
 const WS_URL = 'ws://localhost:8000/ws'
 const ROLLING_WINDOW = 20
 
-const freqFormat = (hz: number) => hz >= 1000 ? (hz / 1000).toFixed(1) + ' kHz' : hz.toFixed(0) + ' Hz'
-const valueFormat = (t: number) => (t * 100).toFixed(1) + ' dBFS'
+const freqFormat = (hz: number) =>
+  hz >= 1e6  ? (hz / 1e6).toFixed(4)  + ' MHz' :
+  hz >= 1e3  ? (hz / 1e3).toFixed(2)  + ' kHz' :
+               hz.toFixed(0)           + ' Hz'
+const valueFormat = (t: number) => (t * 100).toFixed(1) + ' dBr'
 
 function avg(arr: number[]): number {
   return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0
@@ -45,8 +48,8 @@ export default function App() {
   const [isLazy, setIsLazy] = useState(false)
   const [rowHeight, setRowHeight] = useState(1)
   const [binCounts, setBinCounts] = useState<Record<string, number>>({})
-  const [contrast, setContrast] = useState(1.5)    // higher = brighter faint signals
-  const [sensitivity, setSensitivity] = useState(0.7) // higher = more frequencies visible
+  const [contrast, setContrast] = useState(1.5)
+  const [sensitivity, setSensitivity] = useState(0.7)
   const deliveryWindow = useRef<number[]>([])
   const parseWindow    = useRef<number[]>([])
   const pushWindow     = useRef<number[]>([])
@@ -197,10 +200,12 @@ export default function App() {
         ref={waterfallRef}
         colorMap={interpolateTurbo}
         bufferWidth={0}
-        minSpan={32}
+        minSpan={200}
         rowHeight={rowHeight}
         direction="top"
         tooltip
+        timeBar
+        // smoothPixels
         // lazyThreshold={Infinity}
         freqFormat={freqFormat}
         valueFormat={valueFormat}
