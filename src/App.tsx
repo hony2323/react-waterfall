@@ -48,8 +48,6 @@ export default function App() {
   const [isLazy, setIsLazy] = useState(false)
   const [rowHeight, setRowHeight] = useState(1)
   const [binCounts, setBinCounts] = useState<Record<string, number>>({})
-  const [contrast, setContrast] = useState(1.5)
-  const [sensitivity, setSensitivity] = useState(0.7)
   const deliveryWindow = useRef<number[]>([])
   const parseWindow    = useRef<number[]>([])
   const pushWindow     = useRef<number[]>([])
@@ -172,22 +170,6 @@ export default function App() {
             <div className="metric-slider-row">
               <input type="range" min={1} max={8} value={rowHeight} onChange={e => setRowHeight(Number(e.target.value))} />
               <span className="metric-value">{rowHeight}px</span>
-            </div>
-          </div>
-          <div className="metric-divider" />
-          <div className="metric">
-            <span className="metric-label">sensitivity</span>
-            <div className="metric-slider-row">
-              <input type="range" min={0} max={1} step={0.05} value={sensitivity} onChange={e => setSensitivity(Number(e.target.value))} />
-              <span className="metric-value">{sensitivity.toFixed(2)}</span>
-            </div>
-          </div>
-          <div className="metric-divider" />
-          <div className="metric">
-            <span className="metric-label">contrast</span>
-            <div className="metric-slider-row">
-              <input type="range" min={0.1} max={2} step={0.05} value={contrast} onChange={e => setContrast(Number(e.target.value))} />
-              <span className="metric-value">{contrast.toFixed(2)}</span>
             </div>
           </div>
           <div className="metric-divider" />
