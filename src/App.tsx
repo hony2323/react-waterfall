@@ -206,11 +206,11 @@ export default function App() {
         tooltip
         timeBar
         // smoothPixels
-        // lazyThreshold={Infinity}
+        lazyThreshold={8}
         freqFormat={freqFormat}
         valueFormat={valueFormat}
-        sensitivity={{ low: (1 - sensitivity) * 0.5, high: 1.0 }}
-        gamma={2.1 - contrast}
+        sensitivity={{ low: 0, high: 1.0 }}
+        gamma={1.4}
         onMetrics={(pushMs, renderMs, lazy) => {
           const pw = [...pushWindow.current,   pushMs  ].slice(-ROLLING_WINDOW)
           const rw = [...renderWindow.current, renderMs].slice(-ROLLING_WINDOW)
